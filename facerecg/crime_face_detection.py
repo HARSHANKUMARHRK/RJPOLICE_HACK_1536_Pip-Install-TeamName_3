@@ -31,7 +31,7 @@ def findencoding(images):
 
 #defining function for attendance
 def markattendance(name):
-    with open("attendance.csv","r+")as f:
+    with open("crime.csv","r+")as f:
         mydatalist=f.readlines()
         namelist=[]
         for line in mydatalist:
