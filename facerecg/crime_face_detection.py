@@ -7,6 +7,15 @@ import numpy as np
 import face_recognition
 import os
 from datetime import datetime
+import socket
+
+def get_local_ip():
+    local_ip = socket.gethostbyname(socket.gethostname())
+    return local_ip
+
+local_ip = get_local_ip()
+
+
 
 path = "pics"
 images =[]
@@ -40,7 +49,7 @@ def markattendance(name):
         if name not in namelist:
             now =datetime.now()
             dtstring =now.strftime("%H:%M:%S")
-            f.writelines(f'\n{name},{dtstring}')    
+            f.writelines(f'\n{name},{dtstring}{local_ip}')    
 
 #calling the function
 encodelistknown=findencoding(images)            
