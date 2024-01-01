@@ -68,24 +68,20 @@ def frames():
         video_file = request.files['video']
         prompt = request.form['prompt']
 
-        video_path = 'uploaded_video.mp4'  # Change this path as needed
+        video_path = 'uploaded_video.mp4' 
         video_file.save(video_path)
         # extract_frames(video_path, output_frames_folder)
 
         for filename in os.listdir(folder_path):
-            if filename.endswith(".jpg"):  # Assuming all images are in .jpg format
+            if filename.endswith(".jpg"): 
                 image_path = os.path.join(folder_path, filename)
                 image = Image.open(image_path)
-
-                # Perform object detection on the image
                 inputs = processor(images=image, return_tensors="pt")
                 outputs = model(**inputs)
 
-                # Process object detection outputs
                 target_sizes = torch.tensor([image.size[::-1]])
                 results = processor.post_process_object_detection(outputs, target_sizes=target_sizes, threshold=0.9)[0]
 
-                # Check if the prompt matches and confidence is 50 or above
                 for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
                     if score >= 0.5 and model.config.id2label[label.item()] == prompt:
                         box = [round(coord, 2) for coord in box.tolist()]
@@ -93,13 +89,7 @@ def frames():
                                         f"{round(score.item(), 3)} at location {box}"
                         detections.append({"image_path": image_path, "info": detection_info})
 
-
-
-
     return render_template('frame.html', detections=detections)
-
-
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
