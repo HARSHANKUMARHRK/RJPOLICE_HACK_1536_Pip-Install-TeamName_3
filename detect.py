@@ -6,7 +6,7 @@ import os
 processor = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50", revision="no_timm")
 model = DetrForObjectDetection.from_pretrained("facebook/detr-resnet-50", revision="no_timm")
 
-prompt = "bus"
+prompt = "human"
 
 folder_path = "output"
 
