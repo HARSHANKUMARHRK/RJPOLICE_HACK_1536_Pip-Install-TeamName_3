@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session,Response
 from flask_session import Session
 from pymongo import MongoClient
 import urllib.parse
@@ -10,7 +10,7 @@ import cv2
 
 app = Flask(__name__)
 
-
+#static/output
 
 def extract_frames(video_path, output_folder):
     video_reader = cv2.VideoCapture(video_path)
@@ -26,13 +26,41 @@ def extract_frames(video_path, output_folder):
         print(frame_count)
     video_reader.release()
 # input_video_path = "intro.mp4"
-output_frames_folder = "output"
+output_frames_folder = "static/output"
 # extract_frames(input_video_path, output_frames_folder)
+
+def video_processing():
+    cap = cv2.VideoCapture(0)
+    ret, prev_frame = cap.read()
+    c = 0
+    displacement_threshold = 20
+
+    while True:
+        ret, next_frame = cap.read()
+
+        if not ret:
+            break
+        frame_diff = cv2.absdiff(prev_frame, next_frame)
+        frame_diff_gray = cv2.cvtColor(frame_diff, cv2.COLOR_BGR2RGB)
+        mean_diff = cv2.mean(frame_diff_gray)[0]
+
+        if mean_diff > displacement_threshold:
+            c += 1
+            print(c)
+            print("camera displaced")
+
+        ret, buffer = cv2.imencode('.jpg', frame_diff)
+        frame_diff = buffer.tobytes()
+
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_diff + b'\r\n')
+
+        prev_frame = next_frame.copy()
 
 processor = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50", revision="no_timm")
 model = DetrForObjectDetection.from_pretrained("facebook/detr-resnet-50", revision="no_timm")
 app.secret_key = 'abc'
-folder_path = "output"
+folder_path = "static/output"
 mongodb_uri = "mongodb+srv://harshan:" + urllib.parse.quote("Harshan@1803") + "@cluster0.ixfzmsm.mongodb.net/?retryWrites=true&w=majority"
 database_name = 'credentials_db'
 client = MongoClient(mongodb_uri)
@@ -89,7 +117,21 @@ def frames():
                                         f"{round(score.item(), 3)} at location {box}"
                         detections.append({"image_path": image_path, "info": detection_info})
 
+
+#output/frame_59.jpg
     return render_template('frame.html', detections=detections)
+
+@app.route('/displacement')
+def displacement():
+    return render_template('displacement.html')
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(video_processing(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+

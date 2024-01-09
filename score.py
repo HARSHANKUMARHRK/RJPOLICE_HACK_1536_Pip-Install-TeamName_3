@@ -1,7 +1,7 @@
 import os
 from PIL import Image
 import torch
-from transformers import OwlViTProcessor, OwlViTForObjectDetection
+from app2 import OwlViTProcessor, OwlViTForObjectDetection
 
 # Initialize the OwlViT model and processor
 processor = OwlViTProcessor.from_pretrained("google/owlvit-base-patch16")

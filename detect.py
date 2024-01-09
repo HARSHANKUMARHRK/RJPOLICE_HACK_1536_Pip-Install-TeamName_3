@@ -1,4 +1,4 @@
-from transformers import DetrImageProcessor, DetrForObjectDetection
+from app2 import DetrImageProcessor, DetrForObjectDetection
 from PIL import Image
 import torch
 import os
@@ -6,15 +6,16 @@ import os
 processor = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50", revision="no_timm")
 model = DetrForObjectDetection.from_pretrained("facebook/detr-resnet-50", revision="no_timm")
 
-prompt = "human"
+prompt = "person"
 
-folder_path = "output"
-
+folder_path = "static/output"
+c=0
 for filename in os.listdir(folder_path):
     if filename.endswith(".jpg"): 
         image_path = os.path.join(folder_path, filename)
         image = Image.open(image_path)
-
+        c+=1
+        print(c)
         inputs = processor(images=image, return_tensors="pt")
         outputs = model(**inputs)
 
