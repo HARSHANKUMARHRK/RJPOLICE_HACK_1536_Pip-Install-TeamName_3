@@ -8,10 +8,16 @@ import torch
 import os
 import cv2
 #import
+import requests
 
 app = Flask(__name__)
 
 #static/output
+def get_ip_address():
+    url = 'https://api.ipify.org'
+    response = requests.get(url)
+    ip_address = response.text
+    return ip_address
 
 def extract_frames(video_path, output_folder):
     video_reader = cv2.VideoCapture(video_path)
@@ -47,7 +53,10 @@ def video_processing():
 
         if mean_diff > displacement_threshold:
             c += 1
+            ip=get_ip_address()
+            loc=get_location_from_ip(ip)
             print(c)
+            print(loc)
             print("camera displaced")
 
         ret, buffer = cv2.imencode('.jpg', frame_diff)
@@ -57,6 +66,20 @@ def video_processing():
                b'Content-Type: image/jpeg\r\n\r\n' + frame_diff + b'\r\n')
 
         prev_frame = next_frame.copy()
+
+def get_location_from_ip(ip_address):
+    access_token = 'ca2235bc0acff2'  # Replace with your actual access token from ipinfo.io
+    url = f'https://ipinfo.io/{ip_address}?token={access_token}'
+    
+    response = requests.get(url)
+    data = response.json()
+
+    city = data.get('city')
+    region = data.get('region')
+    country = data.get('country')
+    
+    location = f"{city}, {region}, {country}"
+    return location
 
 processor = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50", revision="no_timm")
 model = DetrForObjectDetection.from_pretrained("facebook/detr-resnet-50", revision="no_timm")
