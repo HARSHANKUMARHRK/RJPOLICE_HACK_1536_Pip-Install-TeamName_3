@@ -8,6 +8,7 @@ import torch
 import os
 import cv2
 import requests
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -67,7 +68,7 @@ def video_processing():
         prev_frame = next_frame.copy()
 
 def get_location_from_ip(ip_address):
-    access_token = 'ca2235bc0acff2'  # Replace with your actual access token from ipinfo.io
+    access_token = 'ca2235bc0acff2'  
     url = f'https://ipinfo.io/{ip_address}?token={access_token}'
     
     response = requests.get(url)
@@ -76,9 +77,30 @@ def get_location_from_ip(ip_address):
     city = data.get('city')
     region = data.get('region')
     country = data.get('country')
+    loc = data.get('loc') 
+    latitude, longitude = loc.split(',') if loc else (None, None)
+    location = {
+        'city': city,
+        'region': region,
+        'country': country,
+        'latitude': latitude,
+        'longitude': longitude
+    }
+
+    df = pd.read_csv("police.csv")
+
+    # Convert latitude and longitude to floating-point numbers
+    given_latitude = float(location["latitude"]) if location["latitude"] else None
+    given_longitude = float(location["longitude"]) if location["longitude"] else None
+
+    matching_rows = df[(df["Latitude"] == float(34.9540542)) & (df["Longitude"] == float(135.7515062))]
     
-    location = f"{city}, {region}, {country}"
-    return location
+    if not matching_rows.empty:
+        police_station_name = matching_rows["Police Station Name"].iloc[0]
+        print(police_station_name)
+    
+    location_str = f"{city}, {region}, {country}"
+    return location_str
 
 processor = DetrImageProcessor.from_pretrained("facebook/detr-resnet-50", revision="no_timm")
 model = DetrForObjectDetection.from_pretrained("facebook/detr-resnet-50", revision="no_timm")
@@ -141,7 +163,7 @@ def frames():
                         detections.append({"image_path": image_path, "info": detection_info})
 
 
-#output/frame_59.jpg
+
     return render_template('frame.html', detections=detections)
 
 @app.route('/displacement')
