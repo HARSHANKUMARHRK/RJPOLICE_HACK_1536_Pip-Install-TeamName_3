@@ -7,7 +7,6 @@ from PIL import Image
 import torch
 import os
 import cv2
-#import
 import requests
 
 app = Flask(__name__)
@@ -154,8 +153,6 @@ def video_feed():
     return Response(video_processing(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)
-
 
