@@ -23,9 +23,6 @@
     <header id="header_id" class="main_header header_style_four">
 		<div class="header_top_content clearfix">
 			<div class="container">
-				<div class="header_top_text float-left">
-					<span>Do you want to consult us? <a href="#">Find out more</a></span>
-				</div>
 				<div class="header_top_contact float-right">
 					<a href="#"><i class="fas fa-phone"></i> +987 975 865 86 8</a>
 					<a href="#"><i class="fas fa-map-marker-alt"></i> 503 mila St, New York, NY 10002</a>
@@ -120,7 +117,76 @@
 			</div>
 		</div>
 	</header>
-    <h1>Video Stream</h1>
-    <img src="{{ url_for('video_feed') }}" width="640" height="480">
+    <main>
+        <div class="centered-image">
+            <img src="{{ url_for('video_feed') }}" width="1000" height="1000">
+          </div>
+    </main>
+    <footer>
+	<div class="footer_copyright">
+		<div class="container">
+			<div class="footer_copyright_content">
+				<div class="row">
+					<div class="col-lg-4 col-md-12">
+						<div class="footer_social ul-li clearfix">
+							<ul>
+								<li><a href="#"><i class="fab fa-facebook-f"></i></a></li>
+								<li><a href="#"><i class="fab fa-twitter"></i></a></li>
+								<li><a href="#"><i class="fab fa-behance"></i></a></li>
+								<li><a href="#"><i class="fab fa-linkedin"></i></a></li>
+								<li><a href="#"><i class="fab fa-youtube"></i></a></li>
+							</ul>
+						</div>
+					</div>
+					<div class="col-lg-4 col-md-12">
+						<div class="footer_logo text-center">
+							<a href="index.html"><img src="static/img/home-4/logo/flogo-1.png" alt=""></a>
+						</div>
+					</div>
+					<div class="col-lg-4 col-md-12">
+						<div class="copyright_text text-right">
+							Copyright By @ <a href="%21.html#">Themexriver</a> - 2021
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
 </body>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    header {
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 60px;
+    }
+
+    main {
+        
+        background-image: url("static/img/background/brbg.jpg");
+        background-repeat: no-repeat;
+        background-size: cover; 
+    }
+
+    footer {
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 60px;
+    }
+    .centered-image {
+        display: flex;
+        justify-content: center; /* Horizontal centering */
+        align-items: center; /* Vertical centering */
+        height: auto; /* Fill the entire viewport height */
+        margin: 0; /* Remove any default margins */
+      }      
+</style>
 </html>
