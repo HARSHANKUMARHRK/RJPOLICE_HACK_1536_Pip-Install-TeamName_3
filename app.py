@@ -9,9 +9,16 @@ import os
 import cv2
 import requests
 import pandas as pd
+import pyfirmata
+import time
 
 app = Flask(__name__)
 
+buzzer_pin = 2 
+board = pyfirmata.Arduino('/dev/cu.usbmodem101')
+it = pyfirmata.util.Iterator(board)
+it.start()
+board.digital[buzzer_pin].mode = pyfirmata.OUTPUT
 #static/output
 def get_ip_address():
     url = 'https://api.ipify.org'
@@ -98,6 +105,16 @@ def get_location_from_ip(ip_address):
     if not matching_rows.empty:
         police_station_name = matching_rows["Police Station Name"].iloc[0]
         print(police_station_name)
+        try:
+            while True:
+                board.digital[buzzer_pin].write(1)
+                time.sleep(5)  
+                board.digital[buzzer_pin].write(0)
+                time.sleep(5) 
+
+        except KeyboardInterrupt:
+            board.digital[buzzer_pin].write(0)
+            board.exit()
     
     location_str = f"{city}, {region}, {country}"
     return location_str
