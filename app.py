@@ -108,11 +108,12 @@ def get_location_from_ip(ip_address):
         try:
             while True:
                 board.digital[buzzer_pin].write(1)
-                time.sleep(5)  
+                time.sleep(0.25)  
                 board.digital[buzzer_pin].write(0)
-                time.sleep(5) 
+                time.sleep(0.25) 
 
         except KeyboardInterrupt:
+
             board.digital[buzzer_pin].write(0)
             board.exit()
     
