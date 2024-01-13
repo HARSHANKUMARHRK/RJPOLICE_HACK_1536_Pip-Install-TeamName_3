@@ -15,7 +15,7 @@ import time
 app = Flask(__name__)
 
 buzzer_pin = 2 
-board = pyfirmata.Arduino('/dev/cu.usbmodem101')
+board = pyfirmata.Arduino('/dev/cu.usbmodem1101')
 it = pyfirmata.util.Iterator(board)
 it.start()
 board.digital[buzzer_pin].mode = pyfirmata.OUTPUT
