@@ -17,11 +17,11 @@ import re
 app = Flask(__name__)
 
 buzzer_pin = 2 
-board = pyfirmata.Arduino('/dev/cu.usbmodem101')
+board = pyfirmata.Arduino('/dev/cu.usbmodem1101')
 it = pyfirmata.util.Iterator(board)
 it.start()
 board.digital[buzzer_pin].mode = pyfirmata.OUTPUT
-#static/output
+
 def get_ip_address():
     url = 'https://api.ipify.org'
     response = requests.get(url)
@@ -74,25 +74,31 @@ def video_processing():
 
         if not ret:
             break
+
         frame_diff = cv2.absdiff(prev_frame, next_frame)
         frame_diff_gray = cv2.cvtColor(frame_diff, cv2.COLOR_BGR2RGB)
+
         mean_diff = cv2.mean(frame_diff_gray)[0]
 
         if mean_diff > displacement_threshold:
             c += 1
-            ip=get_ip_address()
-            loc=get_location_from_ip(ip)
             print(c)
-            print(loc)
-            print("camera displaced")
+            print("Camera displaced")
+            cv2.imwrite(f'displacement_{c}.jpg', prev_frame)
 
-        ret, buffer = cv2.imencode('.jpg', frame_diff)
-        frame_diff = buffer.tobytes()
+        else:
+            _, buffer = cv2.imencode('.jpg', next_frame)
+            frame_data = buffer.tobytes()
 
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame_diff + b'\r\n')
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_data + b'\r\n')
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
         prev_frame = next_frame.copy()
+
+    cap.release()
 
 def get_location_from_ip(ip_address):
     access_token = 'ca2235bc0acff2'  

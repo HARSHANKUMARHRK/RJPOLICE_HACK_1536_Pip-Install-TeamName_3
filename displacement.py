@@ -22,9 +22,7 @@ while True:
         print(c)
         print("Camera displaced")
         cv2.imwrite(f'displacement_{c}.jpg', prev_frame)
-        if(c>2):
-            cv2.destroyAllWindows()
-        break
+        
     else:
         cv2.imshow('Original Feed', next_frame)
 

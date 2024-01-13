@@ -5,6 +5,3 @@ transformers
 torch
 opencv-python
 pillow
-pandas
-pyfirmata
-PyPDF2
