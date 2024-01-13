@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session,Re
 from flask_session import Session
 from pymongo import MongoClient
 import urllib.parse
-from transformers import DetrImageProcessor, DetrForObjectDetection
+from transformers import DetrImageProcessor, DetrForObjectDetection,pipeline
 from PIL import Image
 import torch
 import os
@@ -11,11 +11,13 @@ import requests
 import pandas as pd
 import pyfirmata
 import time
+import PyPDF2
+import re
 
 app = Flask(__name__)
 
 buzzer_pin = 2 
-board = pyfirmata.Arduino('/dev/cu.usbmodem1101')
+board = pyfirmata.Arduino('/dev/cu.usbmodem101')
 it = pyfirmata.util.Iterator(board)
 it.start()
 board.digital[buzzer_pin].mode = pyfirmata.OUTPUT
@@ -42,6 +44,24 @@ def extract_frames(video_path, output_folder):
 # input_video_path = "intro.mp4"
 output_frames_folder = "static/output"
 # extract_frames(input_video_path, output_frames_folder)
+
+def extract_text_from_pdf(pdf_path):
+    with open(pdf_path, 'rb') as file:
+        pdf_reader = PyPDF2.PdfReader(file)
+        text = ''
+        for page_num in range(len(pdf_reader.pages)):
+            text += pdf_reader.pages[page_num].extract_text()
+    return text
+
+def preprocess_text(text):
+    text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
+def answer_question(context, question):
+    qa_pipeline = pipeline('question-answering', model='bert-large-uncased-whole-word-masking-finetuned-squad', tokenizer='bert-large-uncased-whole-word-masking-finetuned-squad')
+    result = qa_pipeline(context=context, question=question)
+    return result['answer']
 
 def video_processing():
     cap = cv2.VideoCapture(0)
@@ -192,7 +212,20 @@ def displacement():
 def video_feed():
     return Response(video_processing(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+@app.route('/chatbot')
+def index():
+    return render_template('chatbot.html')
+
+@app.route('/answer', methods=['POST'])
+def get_answer():
+    user_question = request.form['question']
+    answer = answer_question(cleaned_text, user_question)
+    return render_template('chatbot.html', question=user_question, answer=answer)
+
 
 if __name__ == "__main__":
+    pdf_path = 'law.pdf'
+    pdf_text = extract_text_from_pdf(pdf_path)
+    cleaned_text = preprocess_text(pdf_text)
     app.run(host='0.0.0.0', port=5000, debug=True)
 
