@@ -154,6 +154,21 @@
       input[type=radio]:checked + label:after {
       opacity: 1;
       }
+      .image-card {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px;
+            text-align: center;
+        }
+
+      .image-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
      
       button:hover {
       background:  #00b33c;
@@ -204,7 +219,7 @@
           {% if detections %}
           <h2 style="text-align: center;">Detected Images</h2>
           {% for detection in detections %}
-              <div>
+              <div class="image-card">
                   <img src="{{ detection.image_path }}" alt="Detected Image">
                   <p>{{ detection.info }}</p>
               </div>
