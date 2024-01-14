@@ -13,6 +13,13 @@ import pyfirmata
 import time
 import PyPDF2
 import re
+from keras.models import load_model
+import numpy as np
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+
 
 app = Flask(__name__)
 
@@ -21,6 +28,41 @@ board = pyfirmata.Arduino('/dev/cu.usbmodem1101')
 it = pyfirmata.util.Iterator(board)
 it.start()
 board.digital[buzzer_pin].mode = pyfirmata.OUTPUT
+
+MoBiLSTM_model = load_model("violence_classification.h5")\
+
+IMAGE_HEIGHT = 64
+IMAGE_WIDTH = 64
+SEQUENCE_LENGTH = 16
+CLASSES_LIST = ["Non-Violence", "Violence"]
+
+def preprocess_frame(frame):
+    resized_frame = cv2.resize(frame, (IMAGE_HEIGHT, IMAGE_WIDTH))
+    normalized_frame = resized_frame / 255.0 
+    return normalized_frame
+
+def predict_video(video_file_path):
+    video_reader = cv2.VideoCapture(video_file_path)
+    frames_list = []
+
+    for frame_counter in range(SEQUENCE_LENGTH):
+        success, frame = video_reader.read()
+
+        if not success:
+            break
+
+        preprocessed_frame = preprocess_frame(frame)
+        frames_list.append(preprocessed_frame)
+
+    predicted_labels_probabilities = MoBiLSTM_model.predict(np.expand_dims(frames_list, axis=0))[0]
+    predicted_label = np.argmax(predicted_labels_probabilities)
+    predicted_class_name = CLASSES_LIST[predicted_label]
+
+    print(f'Predicted: {predicted_class_name}\nConfidence: {predicted_labels_probabilities[predicted_label]}')
+
+    video_reader.release()
+
+    return predicted_class_name, predicted_labels_probabilities[predicted_label]
 
 def get_ip_address():
     url = 'https://api.ipify.org'
@@ -44,6 +86,44 @@ def extract_frames(video_path, output_folder):
 # input_video_path = "intro.mp4"
 output_frames_folder = "static/output"
 # extract_frames(input_video_path, output_frames_folder)
+
+def send_email(email, attachment_path):
+    
+    body = f'''
+        Alert needed 
+    '''
+
+    sender = 'harshankumarhrk@gmail.com'  # Update with your email
+    password = 'kextqzwaumpqzijr'  # Update with your password
+
+    receiver = email
+
+    message = MIMEMultipart()
+    message['From'] = sender
+    message['To'] = receiver
+    message['Subject'] = "Order Acknowledgment"
+
+    # Attach text body
+    message.attach(MIMEText(body, 'plain'))
+
+    # Attach JPG file
+    with open(attachment_path, 'rb') as file:
+        img_data = file.read()
+        image = MIMEImage(img_data, name="case.jpg")
+        message.attach(image)
+
+    # SMTP setup
+    session = smtplib.SMTP('smtp.gmail.com', 587)
+    session.starttls()
+    session.login(sender, password)
+
+    # Send the email
+    text = message.as_string()
+    session.sendmail(sender, receiver, text)
+
+    # Quit the session
+    session.quit()
+    print('Mail Sent')
 
 def extract_text_from_pdf(pdf_path):
     with open(pdf_path, 'rb') as file:
@@ -83,8 +163,13 @@ def video_processing():
         if mean_diff > displacement_threshold:
             c += 1
             print(c)
+            ip=get_ip_address()
+            loc=get_location_from_ip(ip)
+            print(loc)
             print("Camera displaced")
             cv2.imwrite(f'displacement_{c}.jpg', prev_frame)
+            # send_email("harshankumarhrk@gmail.com","displacement_1.jpg")
+            # session["img_url"]="displacement_1.jpg"
 
         else:
             _, buffer = cv2.imencode('.jpg', next_frame)
@@ -131,6 +216,7 @@ def get_location_from_ip(ip_address):
     if not matching_rows.empty:
         police_station_name = matching_rows["Police Station Name"].iloc[0]
         print(police_station_name)
+        # send_email("harshankumarhrk@gmail.com",session["img_url"])
         try:
             while True:
                 board.digital[buzzer_pin].write(1)
@@ -142,6 +228,8 @@ def get_location_from_ip(ip_address):
 
             board.digital[buzzer_pin].write(0)
             board.exit()
+        # return redirect('email')
+
     
     location_str = f"{city}, {region}, {country}"
     return location_str
@@ -155,6 +243,8 @@ database_name = 'credentials_db'
 client = MongoClient(mongodb_uri)
 db = client[database_name]
 users_collection = db['users']
+
+
 
 @app.route('/')
 def start():
@@ -175,7 +265,7 @@ def login():
 
 @app.route('/home')
 def home():
-    return render_template('home.html',user=session["user"])
+    return render_template('home.html')
 
 @app.route('/frames', methods=['POST', 'GET'])
 def frames():
@@ -219,7 +309,7 @@ def video_feed():
     return Response(video_processing(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/chatbot')
-def index():
+def chatbot():
     return render_template('chatbot.html')
 
 @app.route('/answer', methods=['POST'])
@@ -227,6 +317,38 @@ def get_answer():
     user_question = request.form['question']
     answer = answer_question(cleaned_text, user_question)
     return render_template('chatbot.html', question=user_question, answer=answer)
+
+@app.route('/classifier')
+def classifier():
+    return render_template('classifier.html')
+
+def generate_frames(video_file_path):
+    video_reader = cv2.VideoCapture(video_file_path)
+
+    while True:
+        success, frame = video_reader.read()
+
+        if not success:
+            break
+
+        predicted_class, confidence = predict_video(video_file_path)
+
+        cv2.putText(frame, f'Prediction: {predicted_class} ({confidence:.2f})', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+        _, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        
+@app.route('/result_classifier')
+def result_classifier():
+    return Response(generate_frames("uploaded_video.mp4"), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/email')
+def email():
+    send_email("harshankumarhrk@gmail.com","displacement_1.jpg")
+    return "success"
 
 
 if __name__ == "__main__":
