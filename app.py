@@ -207,7 +207,7 @@ def get_location_from_ip(ip_address):
 
     df = pd.read_csv("police.csv")
 
-    # Convert latitude and longitude to floating-point numbers
+  
     given_latitude = float(location["latitude"]) if location["latitude"] else None
     given_longitude = float(location["longitude"]) if location["longitude"] else None
 
