@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Object Detection</title>
+    <style>
+        .image-card {
+            width: 30%; 
+            margin: 10px;
+            display: inline-block; 
+            vertical-align: top; 
+        }
+
+        .image-card img {
+            max-width: 100%; 
+            height: auto; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+        }
+    </style>
 </head>
 <body>
     <h1>Object Detection</h1>
@@ -15,12 +30,15 @@
 
     {% if detections %}
     <h2>Detected Images</h2>
-    {% for detection in detections %}
-        <div>
-            <img src="{{ detection.image_path }}" alt="Detected Image">
-            <p>{{ detection.info }}</p>
-        </div>
-    {% endfor %}
+    <div>
+        {% for detection in detections %}
+            <div class="image-card">
+                <img src="{{ detection.image_path }}" alt="Detected Image">
+                <p>{{ detection.info }}</p>
+            </div>
+            {% if loop.index % 3 == 0 %}</div><div>{% endif %}
+        {% endfor %}
+    </div>
     {% endif %}
 </body>
 

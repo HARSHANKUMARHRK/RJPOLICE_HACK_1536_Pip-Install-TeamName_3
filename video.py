@@ -14,5 +14,5 @@ def extract_frames(video_path, output_folder):
         print(frame_count)
     video_reader.release()
 input_video_path = "uploaded_video.mp4"
-output_frames_folder = "output"
+output_frames_folder = "static/output"
 extract_frames(input_video_path, output_frames_folder)
