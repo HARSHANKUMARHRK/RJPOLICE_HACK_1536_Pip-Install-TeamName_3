@@ -23,13 +23,13 @@ from email.mime.image import MIMEImage
 
 app = Flask(__name__)
 
-buzzer_pin = 2 
-board = pyfirmata.Arduino('/dev/cu.usbmodem1101')
-it = pyfirmata.util.Iterator(board)
-it.start()
-board.digital[buzzer_pin].mode = pyfirmata.OUTPUT
+# buzzer_pin = 2 
+# board = pyfirmata.Arduino('/dev/cu.usbmodem1101')
+# it = pyfirmata.util.Iterator(board)
+# it.start()
+# board.digital[buzzer_pin].mode = pyfirmata.OUTPUT
 
-MoBiLSTM_model = load_model("violence_classification.h5")\
+MoBiLSTM_model = load_model("violence_classification.h5")
 
 IMAGE_HEIGHT = 64
 IMAGE_WIDTH = 64
@@ -217,17 +217,17 @@ def get_location_from_ip(ip_address):
         police_station_name = matching_rows["Police Station Name"].iloc[0]
         print(police_station_name)
         # send_email("harshankumarhrk@gmail.com",session["img_url"])
-        try:
-            while True:
-                board.digital[buzzer_pin].write(1)
-                time.sleep(0.25)  
-                board.digital[buzzer_pin].write(0)
-                time.sleep(0.25) 
+        # try:
+        #     while True:
+        #         board.digital[buzzer_pin].write(1)
+        #         time.sleep(0.25)  
+        #         board.digital[buzzer_pin].write(0)
+        #         time.sleep(0.25) 
 
-        except KeyboardInterrupt:
+        # except KeyboardInterrupt:
 
-            board.digital[buzzer_pin].write(0)
-            board.exit()
+        #     board.digital[buzzer_pin].write(0)
+        #     board.exit()
         # return redirect('email')
 
     
@@ -343,7 +343,7 @@ def generate_frames(video_file_path):
         
 @app.route('/result_classifier')
 def result_classifier():
-    return Response(generate_frames("uploaded_video.mp4"), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(generate_frames("video.mp4"), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/email')
 def email():
